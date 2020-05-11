@@ -12,30 +12,29 @@ import GameplayKit
 
 class GameViewController: UIViewController {
 
+    var scene: GameScene?
+    @IBOutlet var label: UILabel!
+
     override func viewDidLoad() {
         super.viewDidLoad()
-        
-        if let view = self.view as! SKView? {
-            // Load the SKScene from 'GameScene.sks'
-            if let scene = SKScene(fileNamed: "GameScene") {
-                // Set the scale mode to scale to fit the window
-                scene.scaleMode = .aspectFill
-                
-                // Present the scene
-                view.presentScene(scene)
-            }
-            
-            view.ignoresSiblingOrder = true
-            
-            view.showsFPS = true
-            view.showsNodeCount = true
-        }
+        scene = GameScene(size:view.bounds.size)
+        let skView = self.view as! SKView
+        skView.showsFPS = true
+        skView.showsNodeCount = true
+        skView.ignoresSiblingOrder = true
+        scene!.scaleMode = .aspectFit
+        scene!.viewController = self
+
+        skView.presentScene(scene)
     }
 
     override var shouldAutorotate: Bool {
         return true
     }
 
+    @IBAction func restartPressed(_ sender: UIButton) {
+        scene!.restartPressed()
+    }
     override var supportedInterfaceOrientations: UIInterfaceOrientationMask {
         if UIDevice.current.userInterfaceIdiom == .phone {
             return .allButUpsideDown
