@@ -14,6 +14,7 @@ class GameViewController: UIViewController {
 
     var scene: GameScene?
     @IBOutlet var label: UILabel!
+    @IBOutlet var winsLabel: UILabel!
 
     override func viewDidLoad() {
         super.viewDidLoad()
