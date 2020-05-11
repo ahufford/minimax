@@ -14,7 +14,22 @@ class GameScene: SKScene {
     enum Player {
         case one
         case two
+        case tie
+
+        func value() -> Int {
+            if self == .one {
+                return 1
+            } else if self == .two {
+                return -1
+            } else {
+                return 0
+            }
+        }
     }
+
+    var you: Player!
+    var computer: Player!
+
     var viewController: GameViewController!
     var touchPos: CGPoint?
     var screenBounds: CGRect = CGRect.zero
@@ -29,7 +44,28 @@ class GameScene: SKScene {
         touchPos = nil
 
         boardOrigin = CGPoint(x: screenBounds.width / 2, y: screenBounds.height / 2) + CGPoint(x: cellSize * -1.5, y: cellSize * -1.5)
+
+        restartPressed()
+    }
+
+    func restartPressed() {
+
+        board = [0,0,0,0,0,0,0,0,0]
+        scene?.removeAllChildren()
+        gameOver = false
         drawGrid()
+        viewController.label.text = ""
+
+        let rand = Int.random(in: 0...1)
+        if rand == 0 {
+            you = Player.one
+            computer = Player.two
+        } else {
+            you = Player.two
+            computer = Player.one
+            //computerEasyTurn()
+            computerHardTurn()
+        }
 
     }
 
@@ -58,10 +94,8 @@ class GameScene: SKScene {
     }
 
     var gameOver = false
+
     func checkWin() -> Player? {
-
-
-
         // check horizontal wins
         var totals: [Int] = []
         var lineTotal = 0
@@ -85,11 +119,9 @@ class GameScene: SKScene {
         print(totals)
         if totals.contains(3) {
             gameOver = true
-            viewController.label.text = "You Win!"
             return Player.one
         } else if totals.contains(-3) {
             gameOver = true
-            viewController.label.text = "Computer Wins!"
             return Player.two
         }
 
@@ -97,7 +129,7 @@ class GameScene: SKScene {
         // no 0s means cats game
         if !board.contains(0) {
             gameOver = true
-            viewController.label.text = "Cats Game"
+            return Player.tie
         }
         return nil
 
@@ -111,14 +143,17 @@ class GameScene: SKScene {
             return
         }
         if board[tapIndex] == 0 {
-            board[tapIndex] = 1
+            board[tapIndex] = you.value()
+        } else {
+            return
         }
         updateBoard()
         checkWin()
-        computerTurn()
+        //computerEasyTurn()
+        computerHardTurn()
     }
 
-    func computerTurn() {
+    func computerEasyTurn() {
         if gameOver {
             return
         }
@@ -127,7 +162,7 @@ class GameScene: SKScene {
         while computerTurn {
             let rand = Int.random(in: 0...8)
             if board[rand] == 0 {
-                board[rand] = -1
+                board[rand] = computer.value()
                 computerTurn = false
             }
             tries -= 1
@@ -138,24 +173,52 @@ class GameScene: SKScene {
         updateBoard()
         checkWin()
     }
-    /*
 
-         let bestScore = -Int.max
-         for y in 0...2 {
-             for x in 0...2  {
-                 // Check if available
-                 if board[x + (y * 3)] == 0 {
-                     let score = minimax(board);
+    func computerHardTurn() {
+        if gameOver {
+            return
+        }
+        var bestScore = -Int.max
+        var bestMove = -1
+        for y in 0...2 {
+            for x in 0...2  {
+                // Check if available
+                if board[x + (y * 3)] == 0 {
+
+                    //Do the move, check it, undo it
+                    board[x + (y * 3)] = computer.value()
+                    let score = minimax(board: board, depth: 0, isMaximizing: true)
+                    board[x + (y * 3)] = 0
+
+                    if score > bestScore {
+                        bestScore = score
+                        bestMove = x + (y * 3)
+                    }
 
                  }
              }
          }
-         updateBoard()
+        board[bestMove] = -1
+        updateBoard()
+        checkWin()
+
      }
 
-     func minimax(board: [Int]) {
+    func minimax(board: [Int], depth: Int, isMaximizing: Bool) -> Int {
+        // Base Case (TERMINAL STATES)
+        let result = checkWin()
+        if result != nil {
+            var score = 0
+            if computer.value() == result?.value() {
+                score += 1
+            } else if you.value() == result?.value() {
+                score -= 1
+            }
+            return score
+        }
+        return 1
      }
-     */
+
 
 
     func updateBoard() {
@@ -175,15 +238,6 @@ class GameScene: SKScene {
                 }
             }
         }
-    }
-
-    func restartPressed() {
-        board = [0,0,0,0,0,0,0,0,0]
-        scene?.removeAllChildren()
-        gameOver = false
-        drawGrid()
-        viewController.label.text = ""
-
     }
 
     func getIndex(pos: CGPoint) -> Int? {
